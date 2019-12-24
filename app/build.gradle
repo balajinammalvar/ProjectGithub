@@ -5,7 +5,7 @@ android {
     buildToolsVersion "29.0.2"
     defaultConfig {
         applicationId "com.example.projectgithub"
-        minSdkVersion 15
+        minSdkVersion 16
         targetSdkVersion 29
         versionCode 1
         versionName "1.0"
@@ -26,4 +26,20 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test:runner:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.1'
+
+
+	//Service
+	implementation 'com.google.android.gms:play-services-maps:15.0.1'
+	implementation 'com.google.android.gms:play-services-location:15.0.1'
+	implementation 'com.google.android.gms:play-services-places:15.0.1'
+	//     Retrofit , Gson converter & OkHttp
+	implementation 'com.squareup.retrofit2:retrofit:2.3.0'
+	implementation 'com.squareup.retrofit2:converter-gson:2.3.0'
+
+	//stylable toast
+	implementation 'com.muddzdev:styleabletoast:1.0.7'
+
+	//http for background service
+	implementation 'org.jbundle.util.osgi.wrapped:org.jbundle.util.osgi.wrapped.org.apache.http.client:4.1.2'
+
 }
