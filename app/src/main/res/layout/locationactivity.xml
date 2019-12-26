@@ -1,61 +1,78 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout
-	xmlns:android="http://schemas.android.com/apk/res/android"
-	xmlns:app="http://schemas.android.com/apk/res-auto"
-	xmlns:tools="http://schemas.android.com/tools"
-	android:layout_width="match_parent"
-	android:layout_height="match_parent"
-	tools:context=".LocationAddress"
-	android:orientation="vertical"
-	>
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".LocationAddress"
+    android:background="@color/grey"
+    android:orientation="vertical"
+    >
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/pick_image"
+        android:layout_weight="1"
+        android:layout_marginLeft="5dp"
+        android:layout_marginRight="3dp"
+        android:layout_marginTop="5dp"
+        app:cardCornerRadius="5dp">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="10dp"
+            android:orientation="vertical">
 
-	<TextView
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		android:text=""
-		android:textAlignment="center"
-		android:textColor="@color/black"
-		android:id="@+id/locationaddress"
-		android:layout_centerVertical="true"
-		android:layout_centerHorizontal="true"
-		 />
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Start Service"
+                android:id="@+id/startservice"
+                />
 
-	<Button
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		android:text="Start Service"
-		android:id="@+id/startservice"
-		/>
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Stop Service"
+                android:id="@+id/stopservice"
+                android:layout_below="@+id/startservice"
+                />
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Open Map"
+                android:layout_below="@+id/stopservice"
+                android:id="@+id/openmap"
+                />
 
-	<Button
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		android:text="Stop Service"
-		android:id="@+id/stopservice"
-		android:layout_below="@+id/startservice"
-		/>
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Select Image"
+                android:layout_below="@+id/openmap"
+                android:id="@+id/pickimage"
+                />
+        </LinearLayout>
 
-	<Button
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		android:text="Open Map"
-		android:layout_below="@+id/stopservice"
-		android:id="@+id/openmap"
-		/>
+    </androidx.cardview.widget.CardView>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textAlignment="center"
+        android:textColor="@color/black"
+        android:id="@+id/locationaddress"
+        android:layout_centerVertical="true"
+        android:layout_centerHorizontal="true"
+        />
 
-	<Button
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		android:text="Select Image"
-		android:layout_below="@+id/openmap"
-		android:id="@+id/pickimage"
-		/>
-
-	<ImageView
-		android:layout_width="150dp"
-		android:layout_height="150dp"
-		android:id="@+id/selectedimage"
-		android:layout_below="@+id/pickimage"
-		/>
+    <ImageView
+        android:layout_width="150dp"
+        android:layout_height="150dp"
+        android:id="@+id/selectedimage"
+        android:layout_below="@+id/pick_image"
+        />
 
 </RelativeLayout>
