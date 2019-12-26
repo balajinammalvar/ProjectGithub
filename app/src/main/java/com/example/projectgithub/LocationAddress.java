@@ -73,7 +73,7 @@ public class LocationAddress extends AppCompatActivity  implements  GoogleApiCli
 	private NetworkConnection networkConnection;
 
 	private ProgressDialog progressDialog;
-	private Button startservice,stopservice;
+	private Button startservice,stopservice,openmap;
 
 	//service
 	public static final String ACTION_START_FOREGROUND_SERVICE = "ACTION_START_FOREGROUND_SERVICE";
@@ -90,6 +90,7 @@ public class LocationAddress extends AppCompatActivity  implements  GoogleApiCli
 
 		startservice=findViewById(R.id.startservice);
 		stopservice=findViewById(R.id.stopservice);
+		openmap=findViewById(R.id.openmap);
 		networkConnection=new NetworkConnection(LocationAddress.this);
 		locationaddress = findViewById(R.id.locationaddress);
 		progressDialog = new ProgressDialog(this);
@@ -119,6 +120,15 @@ public class LocationAddress extends AppCompatActivity  implements  GoogleApiCli
 				//stop
 				//service
 				stopService(new Intent(LocationAddress.this, BGServicenormal.class).setAction(ACTION_STOP_FOREGROUND_SERVICE));
+			}
+		});
+		openmap.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View view) {
+				Intent map=new Intent(getApplicationContext(),Maps.class);
+				map.putExtra("latitude",lastLocation.getLatitude());
+				map.putExtra("longtitude",lastLocation.getLongitude());
+				startActivity(map);
 			}
 		});
 
