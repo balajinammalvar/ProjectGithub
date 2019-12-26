@@ -25,7 +25,6 @@ public class MapAddress {
         this.context=context;
         dbHelper=new DBHelper(context);
         onCreateMapTable();
-
     }
 
     public void openDatabase()

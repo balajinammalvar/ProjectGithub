@@ -16,16 +16,22 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.OpenableColumns;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -42,7 +48,12 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
+import com.myhexaville.smartimagepicker.ImagePicker;
+import com.myhexaville.smartimagepicker.OnImagePickedListener;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -73,11 +84,19 @@ public class LocationAddress extends AppCompatActivity  implements  GoogleApiCli
 	private NetworkConnection networkConnection;
 
 	private ProgressDialog progressDialog;
-	private Button startservice,stopservice,openmap;
+	private Button startservice,stopservice,openmap,pickimage;
 
 	//service
 	public static final String ACTION_START_FOREGROUND_SERVICE = "ACTION_START_FOREGROUND_SERVICE";
 	public static final String ACTION_STOP_FOREGROUND_SERVICE = "ACTION_STOP_FOREGROUND_SERVICE";
+
+	//pick image declare check activity result to get selected image
+	private ImagePicker imagePicker;
+	private String mImageName = "";
+	private File mImageFile;
+	String imagename="";
+	private Uri i;
+	private ImageView selectedimage;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -91,6 +110,8 @@ public class LocationAddress extends AppCompatActivity  implements  GoogleApiCli
 		startservice=findViewById(R.id.startservice);
 		stopservice=findViewById(R.id.stopservice);
 		openmap=findViewById(R.id.openmap);
+		pickimage=findViewById(R.id.pickimage);
+		selectedimage=findViewById(R.id.selectedimage);
 		networkConnection=new NetworkConnection(LocationAddress.this);
 		locationaddress = findViewById(R.id.locationaddress);
 		progressDialog = new ProgressDialog(this);
@@ -129,6 +150,27 @@ public class LocationAddress extends AppCompatActivity  implements  GoogleApiCli
 				map.putExtra("latitude",lastLocation.getLatitude());
 				map.putExtra("longtitude",lastLocation.getLongitude());
 				startActivity(map);
+			}
+		});
+
+		pickimage.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View view) {
+				imagePicker=new ImagePicker(LocationAddress.this, null, new OnImagePickedListener() {
+					@Override
+					public void onImagePicked(Uri imageUri) {
+						selectedimage.setImageURI(imageUri);
+						mImageName = getFileName(imageUri);
+						mImageFile = getFileFromImage();
+						i=imageUri;
+						if (i.equals(null)){
+						}
+//						else {
+//							uploadimagebt.setVisibility(View.VISIBLE);
+//						}
+					}
+				});
+				imagePicker.choosePicture(true);
 			}
 		});
 
@@ -272,7 +314,6 @@ public class LocationAddress extends AppCompatActivity  implements  GoogleApiCli
 			if (lastLocation != null) {
 //                        "Long: " + lastLocation.getLongitude() +
 //                        " | Lat: " + lastLocation.getLatitude());
-
 				setFusedLocationUpdate();
 
 			}
@@ -329,7 +370,6 @@ public class LocationAddress extends AppCompatActivity  implements  GoogleApiCli
 //            else {
 //                new GetGeoCodeAPIAsynchTask().execute(latlang[0], latlang[1]);
 //            }
-
 			return null;
 		}
 
@@ -464,6 +504,15 @@ public class LocationAddress extends AppCompatActivity  implements  GoogleApiCli
 			} else {
 				setFusedLocationUpdate();
 			}
+				//image picked
+			if (requestCode==200) {
+				super.onActivityResult(requestCode, resultCode, data);
+//            if (imagePicker.handleActivityResult(resultCode,requestCode,data!=null)) {
+				if (resultCode == RESULT_OK) {
+					imagePicker.handleActivityResult(resultCode, requestCode, data);
+
+				}
+			}
 		}
 	}
 
@@ -547,4 +596,49 @@ public class LocationAddress extends AppCompatActivity  implements  GoogleApiCli
 
 
 	}
+
+	public String getFileName(Uri uri) {
+		String result = null;
+		if (uri.getScheme().equals("content")) {
+			Cursor cursor = getContentResolver().query(uri, null, null, null, null);
+			try {
+				if (cursor != null && cursor.moveToFirst()) {
+					result = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
+				}
+			} finally {
+				cursor.close();
+			}
+		}
+		if (result == null) {
+			result = uri.getPath();
+			int cut = result.lastIndexOf('/');
+			if (cut != -1) {
+				result = result.substring(cut + 1);
+			}
+		}
+		return result;
+	}
+
+	private File getFileFromImage() {
+		try {
+			BitmapDrawable drawable = (BitmapDrawable) selectedimage.getDrawable();
+			Bitmap bitmap = drawable.getBitmap();
+			ByteArrayOutputStream stream = new ByteArrayOutputStream();
+			bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+			byte[] byteArray = stream.toByteArray();
+			File directory = new File(getFilesDir(), "profile");
+			if (!directory.exists())
+				directory.mkdirs();
+			File myappFile = new File(directory
+				+ File.separator + mImageName);
+			FileOutputStream fos = new FileOutputStream(myappFile);
+			fos.write(byteArray);
+//                        mImageName = File_URL + myappFile.getName();
+			return myappFile;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return new File("");
+		}
+	}
+
 }

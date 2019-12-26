@@ -42,4 +42,11 @@ dependencies {
     //http for background service
     implementation 'org.jbundle.util.osgi.wrapped:org.jbundle.util.osgi.wrapped.org.apache.http.client:4.1.2'
 
+	//IMAGEPICKER
+    implementation 'com.myhexaville:smart-image-picker:1.0.4'
+    implementation 'com.theartofdev.edmodo:android-image-cropper:2.3.+'
+
+	//picasso
+	implementation 'com.squareup.picasso:picasso:2.5.2'
+
 }
