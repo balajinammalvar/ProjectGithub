@@ -33,6 +33,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 
 import com.example.projectgithub.LocationAddress;
+import com.example.projectgithub.Maps;
 import com.example.projectgithub.R;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
@@ -71,6 +72,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 
+import dbhelperformap.MapAddress;
 import retrofit2.Call;
 import retrofit2.Response;
 
@@ -193,7 +195,6 @@ public class BGServicenormal extends Service {
 //                NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                 mNotificationManager.createNotificationChannel(channel);
             }
-
             Log.d(TAG, "startServiceWithNotification: five");
 //            startForeground(NOTIFICATION_ID, notification);
 //            mNotificationManager.notify(0 /* Request Code */, builder.build());
@@ -351,6 +352,9 @@ public class BGServicenormal extends Service {
 
     //send location api
     private void sendlocationdetails() {
+		MapAddress mapAddress=new MapAddress(BGServicenormal.this);
+		mapAddress.insertcoordinate(address,String.valueOf(mCurrentLocation.getLongitude()),String.valueOf(mCurrentLocation.getLatitude()),"");
+		Log.d("inserted", address);
 //        try {
 //            trackId = sharedPreferences.getString("trackid", "");
 //            CategoryAPI service = RetroClient.getApiServicesales();
@@ -467,7 +471,7 @@ public class BGServicenormal extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
-        Log.d(TAG, "onStartCommand: ");
+        Log.d(TAG, "onStartCommand:");
         try {
             String regid = sharedPreferences.getString("regid", "");
             if(regid!=null) {
@@ -481,7 +485,8 @@ public class BGServicenormal extends Service {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return START_NOT_STICKY ;
+        return START_REDELIVER_INTENT;
+     //   return START_NOT_STICKY ;
     }
 
     public String getDistance(double lat1, double lon1, double lat2, double lon2) {
@@ -538,12 +543,9 @@ public class BGServicenormal extends Service {
                 distance = Float.parseFloat(dis) / 1000;
                 Log.d(TAG, "getDistance: Distance "+distance);
 //                end_address = args1.get(0).toString().replace("'", "");
-
-
             } else {
                 System.out.print("Doc is null");
                 Log.d(TAG, "getDistance: Doc is null ");
-
                 if (lat1 != 0.0) {
                     Location locationA = new Location("point A");
                     locationA.setLatitude(lat1);
@@ -554,9 +556,7 @@ public class BGServicenormal extends Service {
                     distance = locationA.distanceTo(locationB) / 1000;
                     Log.d(TAG, "getDistance: small distance "+distance);
                 }
-
             }
-
             if (distance == 0) {
                 Log.d(TAG, "getDistance: inside distance is zero");
                 if (lat1 != 0.0) {
@@ -568,10 +568,19 @@ public class BGServicenormal extends Service {
                     locationB.setLatitude(lat2);
                     locationB.setLongitude(lon2);
                     distance = locationA.distanceTo(locationB) / 1000;
+
+                    //this code is for learning purpose
+//                    Location home=new Location("home");
+//                    home.setLatitude(11.5159);
+//                    home.setLongitude(79.3269);
+//
+//                    Location hometwo=new Location("home2");
+//                    hometwo.setLatitude(13.0827);
+//                    hometwo.setLongitude(80.2707);
+//
+//                    distance=home.distanceTo(hometwo);
                 }
             }
-
-
         } catch (Exception e) {
             Log.d(TAG, "getDistance: inside exception in getDistance");
             e.printStackTrace();
@@ -595,8 +604,6 @@ public class BGServicenormal extends Service {
     private class GeocodeAsyncTask extends AsyncTask<Double, Void, Address> {
 
         String errorMessage = "";
-
-
 
         @Override
         protected Address doInBackground(Double... latlang) {
@@ -638,8 +645,6 @@ public class BGServicenormal extends Service {
 //                String title = city + "-" + state;
 //                Alertbox alertbox=new Alertbox(MainActivity.this);
 //                alertbox.showAlertboxwithback("Your Current location is "+city);
-
-
             }
         }
     }

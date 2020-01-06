@@ -91,6 +91,15 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback {
 		}
 		initPermission();
 		init();
+                    Location home=new Location("home");
+                    home.setLatitude(12.0879768);
+                    home.setLongitude(79.2111239);
+
+                    Location hometwo=new Location("home2");
+                    hometwo.setLatitude(12.93991);
+                    hometwo.setLongitude(79.8809852);
+		 float distance=home.distanceTo(hometwo)/1000;
+		Log.e("distance", String.valueOf(distance+" "+"km"));
 	}
 
 	private void getmap() {

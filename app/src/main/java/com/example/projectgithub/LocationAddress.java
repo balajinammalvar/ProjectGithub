@@ -12,8 +12,11 @@ import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.content.BroadcastReceiver;
+import android.content.ContentResolver;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -23,10 +26,12 @@ import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationManager;
+import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.provider.OpenableColumns;
 import android.util.Log;
 import android.view.View;
@@ -59,7 +64,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import network.NetworkChangeReceiver;
 import network.NetworkConnection;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 import service.BGServicenormal;
 
 public class LocationAddress extends AppCompatActivity  implements  GoogleApiClient.ConnectionCallbacks,
@@ -98,6 +107,9 @@ public class LocationAddress extends AppCompatActivity  implements  GoogleApiCli
 	private Uri i;
 	private ImageView selectedimage;
 
+	//broadcast receiver to check interner connection
+	private BroadcastReceiver broadcastReceiver;
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -122,6 +134,19 @@ public class LocationAddress extends AppCompatActivity  implements  GoogleApiCli
 		if (networkConnection.CheckInternet()){
 			//if network present
 		}
+
+		//using broadcast receiver to find network state
+		// reffer on start and on stop method and registerNetworkBroadcastForNougat() to using broadcast
+		broadcastReceiver=new NetworkChangeReceiver() {
+			@Override
+			protected void onNewPosition(Boolean availability) {
+				if (availability){
+					//internet connection true
+				}else {
+					//internet connection false
+				}
+			}
+		};
 
 		startservice.setOnClickListener(new View.OnClickListener() {
 			@Override
@@ -610,34 +635,93 @@ public class LocationAddress extends AppCompatActivity  implements  GoogleApiCli
 			}
 		}
 		if (result == null) {
-			result = uri.getPath();
-			int cut = result.lastIndexOf('/');
-			if (cut != -1) {
-				result = result.substring(cut + 1);
-			}
+			result= getFileNames(uri);
+
 		}
 		return result;
 	}
 
+	public String getFileNames(Uri uri) {
+
+		String[] projection = {MediaStore.MediaColumns.DATA};
+		String path=null;
+		ContentResolver cr = getApplicationContext().getContentResolver();
+		Cursor metaCursor = cr.query(uri, projection, null, null, null);
+		if (metaCursor != null) {
+			try {
+				if (metaCursor.moveToFirst()) {
+					path = metaCursor.getString(0);
+				}
+			} finally {
+				metaCursor.close();
+			}
+		}
+		return path;
+	}
+
+	//upload a image in server using retrofit
+
+//	mImageFile= getFileFromImage();
+//	String filepath=mImageFile.getName();
+
+//	CategoryAPI service = RetroClient.getApiServiceUpload();
+//	RequestBody Title = RequestBody.create(MediaType.parse("text/plain"),mImageFile);
+//	RequestBody PDFreq = RequestBody.create(MediaType.parse("application/pdf"),mImageFile.getName());
+//	MultipartBody.Part filePart = MultipartBody.Part.createFormData("pdf",mImageFile.getName(),PDFreq);
+////	Call<UploadImage> call = service.UploadImage(filePart);
+
+//	if (("Success.").equals(response.body().getMessage()))
+
 	private File getFileFromImage() {
 		try {
-			BitmapDrawable drawable = (BitmapDrawable) selectedimage.getDrawable();
-			Bitmap bitmap = drawable.getBitmap();
+//            BitmapDrawable drawable = (BitmapDrawable) uploadimage.getDrawable();
+//            Bitmap bitmap = drawable.getBitmap();
 			ByteArrayOutputStream stream = new ByteArrayOutputStream();
-			bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+//            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
 			byte[] byteArray = stream.toByteArray();
 			File directory = new File(getFilesDir(), "profile");
 			if (!directory.exists())
 				directory.mkdirs();
 			File myappFile = new File(directory
-				+ File.separator + mImageName);
-			FileOutputStream fos = new FileOutputStream(myappFile);
-			fos.write(byteArray);
-//                        mImageName = File_URL + myappFile.getName();
+				+ File.separator + getFileName(i));
+//            FileOutputStream fos = new FileOutputStream(myappFile);
+//            fos.write(byteArray);
 			return myappFile;
 		} catch (Exception e) {
 			e.printStackTrace();
 			return new File("");
+		}
+	}
+
+	//broadcast receiver above noungat
+	private void registerNetworkBroadcastForNougat() {
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+		registerReceiver(broadcastReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
+		}
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+			registerReceiver(broadcastReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
+		}
+	}
+
+	//to call broadcast receiver on start of an activity
+	@Override
+	public void onStart() {
+		super.onStart();
+		registerNetworkBroadcastForNougat();
+	}
+
+	//on activity stop
+	@Override
+	public void onStop() {
+		super.onStop();
+		unregisterNetworkChanges();
+	}
+
+	protected void unregisterNetworkChanges() {
+		try {
+			unregisterReceiver(broadcastReceiver);
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
 		}
 	}
 
