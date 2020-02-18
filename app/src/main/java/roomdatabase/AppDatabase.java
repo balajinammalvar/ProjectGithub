@@ -8,8 +8,9 @@ import androidx.room.RoomDatabase;
 
 import okhttp3.internal.Version;
 
+
 //@databse entities give the table model class..............
-@Database(entities ={}, version=1)
+@Database(entities ={Users.class}, version=1)
 public  abstract  class AppDatabase extends RoomDatabase  {
 
 		private static AppDatabase INSTANCE;
