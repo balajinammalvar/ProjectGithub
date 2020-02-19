@@ -69,6 +69,8 @@ import network.NetworkConnection;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
+import roomdatabase.AppDatabase;
+import roomdatabase.Users;
 import service.BGServicenormal;
 
 public class LocationAddress extends AppCompatActivity  implements  GoogleApiClient.ConnectionCallbacks,
@@ -110,6 +112,9 @@ public class LocationAddress extends AppCompatActivity  implements  GoogleApiCli
 	//broadcast receiver to check interner connection
 	private BroadcastReceiver broadcastReceiver;
 
+	//room database
+	private AppDatabase appDatabase;
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -131,6 +136,19 @@ public class LocationAddress extends AppCompatActivity  implements  GoogleApiCli
 		progressDialog.setTitle("Retrieving your Location Details");
 		progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
 
+
+		Users users=new Users();
+		users.setUserName("balaji");
+		users.setPassword("balajisachin");
+
+		appDatabase=AppDatabase.getInstance(this);
+		appDatabase.productDAO().insertusername(users);
+
+		List<Users> users1 = appDatabase.productDAO().getusers();
+
+
+		appDatabase.productDAO().updatetable("sachin","balaji","1");
+		List<Users> users2 = appDatabase.productDAO().getusers();
 		if (networkConnection.CheckInternet()){
 			//if network present
 		}
