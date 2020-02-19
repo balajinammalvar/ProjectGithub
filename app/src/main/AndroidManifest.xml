@@ -35,7 +35,7 @@
 			android:exported="true" />
 
 
-				////using broadcast receiver use intent filter also//
+
 		<receiver android:name="network.NetworkChangeReceiver">
 			<intent-filter>
 				<action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
