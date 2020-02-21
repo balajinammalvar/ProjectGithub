@@ -56,6 +56,37 @@ public class PartDetailsDB {
                 +COLUMN_PART_NUMBER+" NVARCHAR, "+COLUMN_QUANTITY+" NVARCHAR ,"
                 +COLUMN_DESCRIPTION+" NVARCHAR, "+COLUMN_PRICE+" NVARCHAR,"+COLUMN_TOTALAMT+" NVARCHAR,"+COLUMN_DEALERMOBILE+" NVARCHAR);");
         Log.d(TAG, "onCreate: ");
+
+        db.execSQL("create table if not exists userdetails(usersno integer primary key autoincrement,photo NVARCHAR);");
+        Log.d(TAG, "onCreate:photo ");
+    }
+
+    public void insertUserDetails(String photo) {
+        ContentValues initialValues = new ContentValues();
+        initialValues.put("photo", photo);
+        long k = db.insert("userdetails", null, initialValues);
+        if (k != -1) {
+            Log.w(TAG, String.valueOf(k));
+//        return db.insert("userdetails", null, initialValues);
+        }
+    }
+
+    public void getimagepaths(){
+        openDatabase();
+        String query="select * from userdetails";
+
+    }
+
+    public byte[] getimage(){
+        byte[] image = new byte[0];
+        openDatabase();
+        String query="select *from userdetails";
+//        String query="select "+COLUMN_DEALERMOBILE+" from "+CART_TABLE_NAME+" ";
+        Cursor cursor=db.rawQuery(query,null);
+        while(cursor.moveToNext()) {
+         image=cursor.getBlob(cursor.getPosition());
+        }
+        return image;
     }
 
     public void insertPartsData(PartModel partModel, String partnumber, String qty, String selectedmobile)

@@ -21,6 +21,7 @@ import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.location.Address;
 import android.location.Geocoder;
@@ -40,6 +41,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -55,21 +57,29 @@ import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.myhexaville.smartimagepicker.ImagePicker;
 import com.myhexaville.smartimagepicker.OnImagePickedListener;
+import com.squareup.picasso.MemoryPolicy;
+import com.squareup.picasso.NetworkPolicy;
+import com.squareup.picasso.Picasso;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import dbhelper.PartDetailsDB;
 import network.NetworkChangeReceiver;
 import network.NetworkConnection;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
 import roomdatabase.AppDatabase;
+import roomdatabase.ImagePath;
 import roomdatabase.Users;
 import service.BGServicenormal;
 
@@ -107,7 +117,7 @@ public class LocationAddress extends AppCompatActivity  implements  GoogleApiCli
 	private File mImageFile;
 	String imagename="";
 	private Uri i;
-	private ImageView selectedimage;
+	private ImageView selectedimage,alereadyimage;
 
 	//broadcast receiver to check interner connection
 	private BroadcastReceiver broadcastReceiver;
@@ -129,6 +139,7 @@ public class LocationAddress extends AppCompatActivity  implements  GoogleApiCli
 		openmap=findViewById(R.id.openmap);
 		pickimage=findViewById(R.id.pickimage);
 		selectedimage=findViewById(R.id.selectedimage);
+		alereadyimage=findViewById(R.id.alereadyimage);
 		networkConnection=new NetworkConnection(LocationAddress.this);
 		locationaddress = findViewById(R.id.locationaddress);
 		progressDialog = new ProgressDialog(this);
@@ -136,19 +147,34 @@ public class LocationAddress extends AppCompatActivity  implements  GoogleApiCli
 		progressDialog.setTitle("Retrieving your Location Details");
 		progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
 
+		PartDetailsDB partDetailsDB1=new PartDetailsDB(this);
 
-		Users users=new Users();
-		users.setUserName("balaji");
-		users.setPassword("balajisachin");
-
+//		byte[] image=partDetailsDB1.getimage();
+//		ByteArrayInputStream imageStream = new ByteArrayInputStream(image);
+//		Bitmap theImage= BitmapFactory.decodeStream(imageStream);
+//		selectedimage.setImageBitmap(theImage);
+//		selectedimage.setVisibility(View.VISIBLE);
+//		Users users=new Users();
+//		users.setUserName("balaji");
+//		users.setPassword("balajisachin");
+//
+//
+//
 		appDatabase=AppDatabase.getInstance(this);
-		appDatabase.productDAO().insertusername(users);
+		List <ImagePath> imagePaths=appDatabase.productDAO().getimage();
 
-		List<Users> users1 = appDatabase.productDAO().getusers();
+		Picasso.with(LocationAddress.this)
+				.load(new File(imagePaths.get(5).getImagePath()))
+				.memoryPolicy(MemoryPolicy.NO_CACHE )
+				.networkPolicy(NetworkPolicy.NO_CACHE)
+				.into(alereadyimage);
+//		appDatabase.productDAO().insertusername(users);
+
+//		List<Users> users1 = appDatabase.productDAO().getusers();
 
 
-		appDatabase.productDAO().updatetable("sachin","balaji","1");
-		List<Users> users2 = appDatabase.productDAO().getusers();
+//		appDatabase.productDAO().updatetable("sachin","balaji","1");
+//		List<Users> users2 = appDatabase.productDAO().getusers();
 		if (networkConnection.CheckInternet()){
 			//if network present
 		}
@@ -205,12 +231,36 @@ public class LocationAddress extends AppCompatActivity  implements  GoogleApiCli
 						selectedimage.setImageURI(imageUri);
 						mImageName = getFileName(imageUri);
 						mImageFile = getFileFromImage();
+						String imagepath= mImageFile.getAbsolutePath();
+
+//						String imageurl="//media/external/images/media/44257/"+mImageName;
+						ImagePath imagePathdao=new ImagePath();
+						imagePathdao.setImagePath(imagepath);
+						appDatabase.productDAO().insertimage(imagePathdao);
+//						List <ImagePath> imagePaths=appDatabase.productDAO().getimage();
+//						PartDetailsDB partDetailsDB=new PartDetailsDB(LocationAddress.this);
+//						partDetailsDB.insertUserDetails(imagepath);
+
+//						Glide.with(LocationAddress.this)
+//								.load(new File(imagePaths.get(0).toString())
+//								.into(alereadyimage);
+
+//						Picasso.with(LocationAddress.this)
+//								.load(new File(imagePaths.get(0).getImagePath()))
+//								.memoryPolicy(MemoryPolicy.NO_CACHE )
+//								.networkPolicy(NetworkPolicy.NO_CACHE)
+//								.into(alereadyimage);
+//						File imageFile = new File(imageurl);
+//						BitmapDrawable d = new BitmapDrawable(getResources(), imageFile.getAbsolutePath());
+////						selectedimage.setImageDrawable(d);
+//						selectedimage.setVisibility(View.VISIBLE);
 						i=imageUri;
 						if (i.equals(null)){
+
 						}
-//						else {
-//							uploadimagebt.setVisibility(View.VISIBLE);
-//						}
+						else {
+							selectedimage.setVisibility(View.VISIBLE);
+						}
 					}
 				});
 				imagePicker.choosePicture(true);
@@ -218,6 +268,75 @@ public class LocationAddress extends AppCompatActivity  implements  GoogleApiCli
 		});
 
 		initpermission();
+	}
+
+	private void getcamerapermission() {
+		if (ContextCompat.checkSelfPermission(LocationAddress.this, Manifest.permission.CAMERA)== PackageManager.PERMISSION_GRANTED){
+//			qrcodescanoptionalert();
+		}else {
+			ActivityCompat.requestPermissions(LocationAddress.this,new String[] {Manifest.permission.CAMERA},9);
+		}
+	}
+
+//	onActivityresultfor camerapermission
+//	if (requestCode==9&&grantResults[0]==PackageManager.PERMISSION_GRANTED){
+//		qrcodescanoptionalert();
+//	}else if (requestCode==9){
+//		AlertDialog.Builder dialog = new AlertDialog.Builder(getActivity());
+//		dialog.setTitle("Give Permission" )
+//				.setMessage("Need camera permission to scan")
+//				.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+//					public void onClick(DialogInterface dialoginterface, int i) {
+//						dialoginterface.cancel();
+//					}})
+//				.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+//					public void onClick(DialogInterface dialoginterface, int i) {
+//						getcamerapermission();
+//					}
+//				}).show();
+//	}
+	private File getFileFromImage() {
+		try {
+			BitmapDrawable drawable = (BitmapDrawable) selectedimage.getDrawable();
+			Bitmap bitmap = drawable.getBitmap();
+			ByteArrayOutputStream stream = new ByteArrayOutputStream();
+			bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+			byte[] byteArray = stream.toByteArray();
+			File directory = new File(getFilesDir(), "profile");
+			if (!directory.exists())
+				directory.mkdirs();
+			File myappFile = new File(directory
+					+ File.separator + mImageName);
+			FileOutputStream fos = new FileOutputStream(myappFile);
+			fos.write(byteArray);
+//			mImageName = File_URL + myappFile.getName();
+			return myappFile;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return new File("");
+		}
+	}
+
+	public String getFileName(Uri uri) {
+		String result = null;
+		if (uri.getScheme().equals("content")) {
+			Cursor cursor = getContentResolver().query(uri, null, null, null, null);
+			try {
+				if (cursor != null && cursor.moveToFirst()) {
+					result = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
+				}
+			} finally {
+				cursor.close();
+			}
+		}
+		if (result == null) {
+			result = uri.getPath();
+			int cut = result.lastIndexOf('/');
+			if (cut != -1) {
+				result = result.substring(cut + 1);
+			}
+		}
+		return result;
 	}
 
 	//step1:
@@ -548,13 +667,34 @@ public class LocationAddress extends AppCompatActivity  implements  GoogleApiCli
 				setFusedLocationUpdate();
 			}
 				//image picked
-			if (requestCode==200) {
-				super.onActivityResult(requestCode, resultCode, data);
-//            if (imagePicker.handleActivityResult(resultCode,requestCode,data!=null)) {
-				if (resultCode == RESULT_OK) {
-					imagePicker.handleActivityResult(resultCode, requestCode, data);
 
-				}
+		}	if (requestCode==200) {
+//			Uri targetUri = data.getData();
+//			Bitmap mBitmap;
+//			try {
+////				mBitmap = BitmapFactory.decodeStream(getContentResolver().openInputStream(targetUri));
+////				String imageurl=mBitmap.toString();
+////				ByteArrayOutputStream baos = new ByteArrayOutputStream();
+////				mBitmap.compress(Bitmap.CompressFormat.JPEG,100,baos);
+////				byte[] photo = baos.toByteArray();
+////				selectedimage.setImageBitmap(mBitmap);
+////				selectedimage.setVisibility(View.VISIBLE);
+////				PartDetailsDB partDetailsDB=new PartDetailsDB(LocationAddress.this);
+////				partDetailsDB.openDatabase();
+////				partDetailsDB.insertUserDetails(photo);
+//
+//			} catch (FileNotFoundException e) {
+//				e.printStackTrace();
+//
+//			}
+
+//			selectedimage.setImageBitmap(mBitmap);
+
+			//             textTargetUri.setText(targetUri.toString());
+			super.onActivityResult(requestCode, resultCode, data);
+//            if (imagePicker.handleActivityResult(resultCode,requestCode,data!=null)) {
+			if (resultCode == RESULT_OK) {
+				imagePicker.handleActivityResult(resultCode, requestCode, data);
 			}
 		}
 	}
@@ -640,42 +780,44 @@ public class LocationAddress extends AppCompatActivity  implements  GoogleApiCli
 
 	}
 
-	public String getFileName(Uri uri) {
-		String result = null;
-		if (uri.getScheme().equals("content")) {
-			Cursor cursor = getContentResolver().query(uri, null, null, null, null);
-			try {
-				if (cursor != null && cursor.moveToFirst()) {
-					result = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
-				}
-			} finally {
-				cursor.close();
-			}
-		}
-		if (result == null) {
-			result= getFileNames(uri);
+//	public String getFileName(Uri uri) {
+//		String result = null;
+//		if (uri.getScheme().equals("content")) {
+//			Cursor cursor = getContentResolver().query(uri, null, null, null, null);
+//			try {
+//				if (cursor != null && cursor.moveToFirst()) {
+//					result = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
+//				}
+//			} finally {
+//				cursor.close();
+//			}
+//		}
+//		if (result == null) {
+//			result= getFileNames(uri);
+//
+//		}
+//		return result;
+//	}
 
-		}
-		return result;
-	}
 
-	public String getFileNames(Uri uri) {
 
-		String[] projection = {MediaStore.MediaColumns.DATA};
-		String path=null;
-		ContentResolver cr = getApplicationContext().getContentResolver();
-		Cursor metaCursor = cr.query(uri, projection, null, null, null);
-		if (metaCursor != null) {
-			try {
-				if (metaCursor.moveToFirst()) {
-					path = metaCursor.getString(0);
-				}
-			} finally {
-				metaCursor.close();
-			}
-		}
-		return path;
-	}
+//	public String getFileNames(Uri uri) {
+//
+//		String[] projection = {MediaStore.MediaColumns.DATA};
+//		String path=null;
+//		ContentResolver cr = getApplicationContext().getContentResolver();
+//		Cursor metaCursor = cr.query(uri, projection, null, null, null);
+//		if (metaCursor != null) {
+//			try {
+//				if (metaCursor.moveToFirst()) {
+//					path = metaCursor.getString(0);
+//				}
+//			} finally {
+//				metaCursor.close();
+//			}
+//		}
+//		return path;
+//	}
 
 	//upload a image in server using retrofit
 
@@ -690,26 +832,26 @@ public class LocationAddress extends AppCompatActivity  implements  GoogleApiCli
 
 //	if (("Success.").equals(response.body().getMessage()))
 
-	private File getFileFromImage() {
-		try {
-//            BitmapDrawable drawable = (BitmapDrawable) uploadimage.getDrawable();
-//            Bitmap bitmap = drawable.getBitmap();
-			ByteArrayOutputStream stream = new ByteArrayOutputStream();
-//            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
-			byte[] byteArray = stream.toByteArray();
-			File directory = new File(getFilesDir(), "profile");
-			if (!directory.exists())
-				directory.mkdirs();
-			File myappFile = new File(directory
-				+ File.separator + getFileName(i));
-//            FileOutputStream fos = new FileOutputStream(myappFile);
-//            fos.write(byteArray);
-			return myappFile;
-		} catch (Exception e) {
-			e.printStackTrace();
-			return new File("");
-		}
-	}
+//	private File getFileFromImage() {
+//		try {
+////            BitmapDrawable drawable = (BitmapDrawable) selectedimage.getDrawable();
+////            Bitmap bitmap = drawable.getBitmap();
+////			ByteArrayOutputStream stream = new ByteArrayOutputStream();
+////            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+////			byte[] byteArray = stream.toByteArray();
+//			File directory = new File(getFilesDir(), "profile");
+//			if (!directory.exists())
+//				directory.mkdirs();
+//			File myappFile = new File(directory
+//				+ File.separator + getFileName(i));
+////            FileOutputStream fos = new FileOutputStream(myappFile);
+////            fos.write(byteArray);
+//			return myappFile;
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//			return new File("");
+//		}
+//	}
 
 	//broadcast receiver above noungat
 	private void registerNetworkBroadcastForNougat() {
