@@ -1,5 +1,6 @@
 package com.example.projectgithub;
 
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
@@ -163,11 +164,11 @@ public class LocationAddress extends AppCompatActivity  implements  GoogleApiCli
 		appDatabase=AppDatabase.getInstance(this);
 		List <ImagePath> imagePaths=appDatabase.productDAO().getimage();
 
-		Picasso.with(LocationAddress.this)
-				.load(new File(imagePaths.get(5).getImagePath()))
-				.memoryPolicy(MemoryPolicy.NO_CACHE )
-				.networkPolicy(NetworkPolicy.NO_CACHE)
-				.into(alereadyimage);
+//		Picasso.with(LocationAddress.this)
+//				.load(new File(imagePaths.get(0).getImagePath()))
+//				.memoryPolicy(MemoryPolicy.NO_CACHE )
+//				.networkPolicy(NetworkPolicy.NO_CACHE)
+//				.into(alereadyimage);
 //		appDatabase.productDAO().insertusername(users);
 
 //		List<Users> users1 = appDatabase.productDAO().getusers();
