@@ -374,11 +374,17 @@ public class LocationAddress extends AppCompatActivity  implements  GoogleApiCli
 	//step 3
 	private synchronized void createGoogleApi() {
 		{
-			googleApiClient = new GoogleApiClient.Builder(LocationAddress.this)
-				.addConnectionCallbacks(this)
-				.addOnConnectionFailedListener(this)
-				.addApi(LocationServices.API)
-				.build();
+//			googleApiClient = new GoogleApiClient.Builder(LocationAddress.this)
+//				.addConnectionCallbacks(this)
+//				.addOnConnectionFailedListener(this)
+//				.addApi(LocationServices.API)
+//				.build();
+
+			googleApiClient = new GoogleApiClient.Builder(this)
+					.addApi(LocationServices.API)
+					.addConnectionCallbacks(this)
+					.addOnConnectionFailedListener(this)
+					.build();
 		}
 	}
 
@@ -479,6 +485,8 @@ public class LocationAddress extends AppCompatActivity  implements  GoogleApiCli
 //                        " | Lat: " + lastLocation.getLatitude());
 				setFusedLocationUpdate();
 
+			}else {
+				getlocationinfo();
 			}
 		}
 	}
@@ -869,6 +877,7 @@ public class LocationAddress extends AppCompatActivity  implements  GoogleApiCli
 	public void onStart() {
 		super.onStart();
 		registerNetworkBroadcastForNougat();
+		googleApiClient.connect();
 	}
 
 	//on activity stop
@@ -876,6 +885,7 @@ public class LocationAddress extends AppCompatActivity  implements  GoogleApiCli
 	public void onStop() {
 		super.onStop();
 		unregisterNetworkChanges();
+		googleApiClient.disconnect();
 	}
 
 	protected void unregisterNetworkChanges() {

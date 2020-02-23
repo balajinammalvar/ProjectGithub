@@ -2,6 +2,11 @@
 	<string name="app_name">ProjectGithub</string>
 
 	<string name="google_maps_key" templateMergeStrategy="preserve" translatable="false">
-		AIzaSyB9kdMz4eGNnXSMSMQ0cGLG7tHq6bNLr18</string>
+		AIzaSyDOPJEqHLIZW4fyYQF-D59MtFitBGL3PP8</string>
 
+
+<!--	balaji map key AIzaSyDOPJEqHLIZW4fyYQF-D59MtFitBGL3PP8-->
+
+<!--	company key AIzaSyB9kdMz4eGNnXSMSMQ0cGLG7tHq6bNLr18-->
+<!---->
 </resources>

@@ -94,7 +94,7 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, TaskLo
 	private SQLiteDatabase db;
 	private MarkerOptions markerOptions,markerOptions2;
 	private Polyline currentPolyline;
-	private AutoCompleteTextView searchplace;
+	private AutoCompleteTextView searchplace,tolocation;
 	private Button search;
 	private PlaceAutocompleteAdapter mPlaceAutocompleteAdapter;
 	private GoogleApiClient mGoogleApiClient;
@@ -111,6 +111,7 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, TaskLo
 		latitude = getIntent().getDoubleExtra("latitude", 0.00);
 		longitute = getIntent().getDoubleExtra("longtitude", 0.00);
 		searchplace=findViewById(R.id.searchplace);
+		tolocation=findViewById(R.id.tolocation);
 		search=findViewById(R.id.search);
 
 
@@ -150,7 +151,7 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, TaskLo
 		markerOptions2=new MarkerOptions().position(new LatLng(13.009345,80.220004)).title("guindy");
 		//String url=
 		//passing and get route json
-//		new FetchURL(getApplicationContext()).execute(getUrl(markerOptions.getPosition(),markerOptions2.getPosition(),"driving"));
+		//new FetchURL(getApplicationContext()).execute(getUrl(markerOptions.getPosition(),markerOptions2.getPosition(),"driving"));
 
 //			api key error autocomplete
 //		mPlaceAutocompleteAdapter = new PlaceAutocompleteAdapter(this, mGoogleApiClient,
@@ -165,14 +166,14 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, TaskLo
 				getlocation();
 			}
 		});
+
 	}
 //
 //	private void getsearch(){
 //
 //		searchplace.setOnEditorActionListener(new TextView.OnEditorActionListener() {
 //			@Override
-//			public boolean onEditorAction(TextView textView, int actionid, KeyEvent keyEvent) {
-//
+//			public boolean onEditorAction(TextView textView, int actionid, KeyEv
 //				if (actionid== EditorInfo.IME_ACTION_DONE||
 //						actionid==EditorInfo.IME_ACTION_DONE||
 //						keyEvent.getAction()==keyEvent.ACTION_DOWN||
@@ -186,19 +187,26 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, TaskLo
 //	}
 	private void getlocation() {
 		String address=searchplace.getText().toString();
+		String address2=tolocation.getText().toString();
 		Geocoder geocoder=new Geocoder(Maps.this);
 		List<Address> list=new ArrayList<>();
+		List<Address> list2=new ArrayList<>();
 		try {
 			list=geocoder.getFromLocationName(address,1);
+            list2=geocoder.getFromLocationName(address2,1);
 		}catch (Exception e){
 		}
-		if (list.size()>0){
+		if (list.size()>0 && list2.size()>0){
 
 			Address address1=list.get(0);
-			MarkerOptions markerOptions;
-			markerOptions=new MarkerOptions().position(new LatLng(list.get(0).getLatitude(),list.get(0).getLongitude())).title(address);
-			map.addMarker(markerOptions);
+			Address addressto=list.get(0);
+			MarkerOptions markerOptionsfromlocation,tolocation;
+            tolocation=new MarkerOptions().position(new LatLng(list2.get(0).getLatitude(),list.get(0).getLongitude())).title(address);
+            markerOptionsfromlocation=new MarkerOptions().position(new LatLng(list.get(0).getLatitude(),list.get(0).getLongitude())).title(address);
+			map.addMarker(markerOptionsfromlocation);
+			map.addMarker(tolocation);
 			moveCamera(new LatLng(list.get(0).getLatitude(),list.get(0).getLongitude()),12.0f);
+			moveCamera(new LatLng(list2.get(0).getLatitude(),list.get(0).getLongitude()),12.0f);
 			list.get(0).getLatitude();
 			Log.e(TAG, "getlocation: "+address1.toString());
 		}
@@ -329,6 +337,7 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, TaskLo
 			return;
 		}
 		map.setMyLocationEnabled(true);
+
 		CircleOptions circleOptions=new CircleOptions();
         circleOptions.center(latLng);
 		map.setMapType(GoogleMap.MAP_TYPE_NORMAL);
@@ -342,6 +351,8 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, TaskLo
                 .position(latLng)
                 .title("Balaji");
         map.addMarker(marker);
+        map.addMarker(markerOptions);
+        map.addMarker(markerOptions2);
 	}
 
 
