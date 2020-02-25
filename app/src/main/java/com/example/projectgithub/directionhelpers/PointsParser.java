@@ -1,5 +1,6 @@
-package directionpackage;
+package com.example.projectgithub.directionhelpers;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
 import android.os.AsyncTask;

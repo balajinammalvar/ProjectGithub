@@ -29,6 +29,7 @@ import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationManager;
 import android.net.ConnectivityManager;
+import android.net.LocalSocketAddress;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -101,6 +102,7 @@ public class LocationAddress extends AppCompatActivity  implements  GoogleApiCli
 	protected static final int RESULT_LOCATION_CODE_CANCELLED = 0;
 	private LocationCallback mLocationCallback;
 	private String addressss="";
+	private static final int THREE_MINUTES = 3* 60 * 1000;
 	//location declaration ending intials location manager on OnCreate
 	private TextView locationaddress;
 	private NetworkConnection networkConnection;
@@ -351,13 +353,19 @@ public class LocationAddress extends AppCompatActivity  implements  GoogleApiCli
 	}
 
 	//step2
+	@SuppressLint("MissingPermission")
 	private void getlocationinfo() {
 		mLocationCallback = new LocationCallback() {
+			@SuppressLint("MissingPermission")
 			@Override
 			public void onLocationResult(LocationResult locationResult) {
 				super.onLocationResult(locationResult);
 				// location is received
-				lastLocation = locationResult.getLastLocation();
+				locationManager.requestLocationUpdates(
+						LocationManager.NETWORK_PROVIDER,
+						THREE_MINUTES,
+						MIN_DISTANCE_CHANGE_FOR_UPDATES,LocationAddress.this);
+				lastLocation = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
 //                    mLastUpdateTime = DateFormat.gettimeinstance().format(new Date());
 //                    updateLocationUI();
 //                    progressDialog.dismiss();
@@ -366,6 +374,10 @@ public class LocationAddress extends AppCompatActivity  implements  GoogleApiCli
 		createGoogleApi();
 		createLocationRequest();
 		if (lastLocation == null) {
+			locationManager.requestLocationUpdates(
+					LocationManager.NETWORK_PROVIDER,
+					THREE_MINUTES,
+					MIN_DISTANCE_CHANGE_FOR_UPDATES, LocationAddress.this);
 			lastLocation = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
 			enableGPS();
 		}
@@ -394,7 +406,6 @@ public class LocationAddress extends AppCompatActivity  implements  GoogleApiCli
 		mLocationRequest.setFastestInterval(100);
 		mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 		mLocationRequest.setSmallestDisplacement(10);
-
 	}
 
 	//step 4

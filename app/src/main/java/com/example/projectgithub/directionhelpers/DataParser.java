@@ -1,4 +1,4 @@
-package directionpackage;
+package com.example.projectgithub.directionhelpers;
 
 import com.google.android.gms.maps.model.LatLng;
 

@@ -2,7 +2,6 @@ package com.example.projectgithub;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.FragmentActivity;
 
@@ -26,10 +25,12 @@ import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.projectgithub.directionhelpers.FetchURL;
+import com.example.projectgithub.directionhelpers.GPSTracker;
+import com.example.projectgithub.directionhelpers.TaskLoadedCallback;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -47,11 +48,14 @@ import com.google.android.gms.location.SettingsClient;
 import com.google.android.gms.location.places.Places;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
@@ -65,12 +69,13 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import adapter.PlaceAutoSuggestAdapter;
 import adapter.PlaceAutocompleteAdapter;
 import dbhelperformap.MapAddress;
-import directionpackage.FetchURL;
-import directionpackage.TaskLoadedCallback;
+
+
 
 public class Maps extends FragmentActivity implements OnMapReadyCallback, TaskLoadedCallback, GoogleApiClient.OnConnectionFailedListener {
 
@@ -92,7 +97,7 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, TaskLo
 	private String TAG,getingaddress,inserttime;
 	private static final int REQUEST_CHECK_SETTINGS = 100;
 	private SQLiteDatabase db;
-	private MarkerOptions markerOptions,markerOptions2;
+	private MarkerOptions fromlocation,tolocations;
 	private Polyline currentPolyline;
 	private AutoCompleteTextView searchplace,tolocation;
 	private Button search;
@@ -100,6 +105,9 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, TaskLo
 	private GoogleApiClient mGoogleApiClient;
 	private static final LatLngBounds LAT_LNG_BOUNDS = new LatLngBounds(
 			new LatLng(-40, -168), new LatLng(71, 136));
+	private Marker marker;
+//	private MarkerOptions marker;
+	private GPSTracker gpsTracker;
 
 
 
@@ -108,18 +116,59 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, TaskLo
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_maps);
 		getmap();
+
 		latitude = getIntent().getDoubleExtra("latitude", 0.00);
 		longitute = getIntent().getDoubleExtra("longtitude", 0.00);
 		searchplace=findViewById(R.id.searchplace);
 		tolocation=findViewById(R.id.tolocation);
 		search=findViewById(R.id.search);
 
+//		Mmap=((MapFragment) getFragmentManager().findFragmentById(R.id.map)).getMap();
+//		map=((SupportMapFragment)getSupportFragmentManager().findFragmentById(R.id.map)).gem();
+//		map=((MapFragment) getFragmentManager().findFragmentById(R.id.map)).getmap();
+
+//		marker = map.addMarker(new MarkerOptions();
+//		marker=new Marker("","");
+				//				.position(
+//						new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude()))
+//				.draggable(true).visible(false));
+
+		gpsTracker=new GPSTracker(Maps.this);
+		double curlat=gpsTracker.getLatitude();
+		double curlon=gpsTracker.getLongitude();
+		LatLng currentpos=new LatLng(curlat, curlon);
+
+
+//		marker=new Marker();
+
+//		marker=map.addMarker(new MarkerOptions().position(currentpos)
+//						.title("dragging")
+//						.snippet("Long press and move the marker if needed.")
+//						.draggable(true)
+//				.icon(BitmapDescriptorFactory.fromResource(R.drawable.pindrop)));
+
+//		map.setOnMarkerDragListener(new GoogleMap.OnMarkerDragListener() {
+//			@Override
+//			public void onMarkerDragStart(Marker marker) {
+//				Toast.makeText(Maps.this, marker.toString(), Toast.LENGTH_LONG).show();
+//			}
+//
+//			@Override
+//			public void onMarkerDrag(Marker marker) {
+//				Toast.makeText(Maps.this, marker.toString(), Toast.LENGTH_LONG).show();
+//			}
+//
+//			@Override
+//			public void onMarkerDragEnd(Marker marker) {
+//				Toast.makeText(Maps.this, marker.toString(), Toast.LENGTH_LONG).show();
+//			}
+//		});
 
 		//method 2 failed
-		searchplace.setAdapter(new PlaceAutoSuggestAdapter(Maps.this,android.R.layout.simple_list_item_1));
-		searchplace.setThreshold(2);
+//		searchplace.setAdapter(new PlaceAutoSuggestAdapter(Maps.this,android.R.layout.simple_list_item_1));
+//		searchplace.setThreshold(2);
 
-		//method 1 tried to autocompleted
+////		//method 1 tried to autocompleted
 //		mGoogleApiClient = new GoogleApiClient
 //				.Builder(this)
 //				.addApi(Places.GEO_DATA_API)
@@ -147,16 +196,15 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, TaskLo
 		 float distance=home.distanceTo(hometwo)/1000;
 		Log.e("distance", String.valueOf(distance+" "+"km"));
 
-		markerOptions=new MarkerOptions().position(new LatLng(12.997146,80.201990)).title("alandur");
-		markerOptions2=new MarkerOptions().position(new LatLng(13.009345,80.220004)).title("guindy");
+
 		//String url=
 		//passing and get route json
-		//new FetchURL(getApplicationContext()).execute(getUrl(markerOptions.getPosition(),markerOptions2.getPosition(),"driving"));
+
 
 //			api key error autocomplete
 //		mPlaceAutocompleteAdapter = new PlaceAutocompleteAdapter(this, mGoogleApiClient,
 //				LAT_LNG_BOUNDS, null);
-//
+////
 //		searchplace.setAdapter(mPlaceAutocompleteAdapter);
 
 		search.setOnClickListener(new View.OnClickListener() {
@@ -167,8 +215,96 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, TaskLo
 			}
 		});
 
-	}
+
 //
+//		searchplace.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+//			@Override
+//			public boolean onEditorAction(TextView textView, int actionid, KeyEvent keyEvent) {
+//
+//				if(actionid == EditorInfo.IME_ACTION_SEARCH
+//						|| actionid == EditorInfo.IME_ACTION_DONE
+//						|| keyEvent.getAction() == KeyEvent.ACTION_DOWN
+//						|| keyEvent.getAction() == KeyEvent.KEYCODE_ENTER){
+//
+//					//execute our method for searching
+//					geoLocate();
+//				}
+//				return false;
+//			}
+//		});
+
+
+	}
+
+	private void getautocomplete() {
+		mGoogleApiClient = new GoogleApiClient
+				.Builder(this)
+				.addApi(Places.GEO_DATA_API)
+				.addApi(Places.PLACE_DETECTION_API)
+				.enableAutoManage(this, this)
+				.build();
+		mPlaceAutocompleteAdapter = new PlaceAutocompleteAdapter(this, mGoogleApiClient,
+				LAT_LNG_BOUNDS, null);
+//
+		searchplace.setAdapter(mPlaceAutocompleteAdapter);
+
+
+		searchplace.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+			@Override
+			public boolean onEditorAction(TextView textView, int actionid, KeyEvent keyEvent) {
+
+				if(actionid == EditorInfo.IME_ACTION_SEARCH
+						|| actionid == EditorInfo.IME_ACTION_DONE
+						|| keyEvent.getAction() == KeyEvent.ACTION_DOWN
+						|| keyEvent.getAction() == KeyEvent.KEYCODE_ENTER){
+
+					//execute our method for searching
+					geoLocate();
+				}
+				return false;
+			}
+		});
+	}
+
+
+	private void geoLocate(){
+		Log.d(TAG, "geoLocate: geolocating");
+
+		String searchString = searchplace.getText().toString();
+
+		Geocoder geocoder = new Geocoder(Maps.this);
+		List<Address> list = new ArrayList<>();
+		try{
+			list = geocoder.getFromLocationName(searchString, 1);
+		}catch (IOException e){
+			Log.e(TAG, "geoLocate: IOException: " + e.getMessage() );
+		}
+
+		if(list.size() > 0){
+			Address address = list.get(0);
+
+			Log.d(TAG, "geoLocate: found a location: " + address.toString());
+			//Toast.makeText(this, address.toString(), Toast.LENGTH_SHORT).show();
+
+			moveCamerasearch(new LatLng(address.getLatitude(), address.getLongitude()), DEFAULT_ZOOM,
+					address.getAddressLine(0));
+		}
+	}
+
+	private void moveCamerasearch(LatLng latLng, float zoom, String title){
+		Log.d(TAG, "moveCamera: moving the camera to: lat: " + latLng.latitude + ", lng: " + latLng.longitude );
+		map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, zoom));
+
+		if(!title.equals("My Location")){
+			MarkerOptions options = new MarkerOptions()
+					.position(latLng)
+					.title(title);
+			map.addMarker(options);
+		}
+
+		hideSoftKeyboard();
+	}
+////
 //	private void getsearch(){
 //
 //		searchplace.setOnEditorActionListener(new TextView.OnEditorActionListener() {
@@ -186,21 +322,27 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, TaskLo
 //		});
 //	}
 	private void getlocation() {
+
 		String address=searchplace.getText().toString();
 		String address2=tolocation.getText().toString();
+
 		Geocoder geocoder=new Geocoder(Maps.this);
 		List<Address> list=new ArrayList<>();
 		List<Address> list2=new ArrayList<>();
 		try {
 			list=geocoder.getFromLocationName(address,1);
             list2=geocoder.getFromLocationName(address2,1);
+			fromlocation=new MarkerOptions().position(new LatLng(list.get(0).getLatitude(),list.get(0).getLongitude())).title("alandur");
+			tolocations=new MarkerOptions().position(new LatLng(list2.get(0).getLatitude(),list.get(0).getLongitude())).title("guindy");
 		}catch (Exception e){
 		}
 		if (list.size()>0 && list2.size()>0){
-
 			Address address1=list.get(0);
-			Address addressto=list.get(0);
+			Address addressto=list2.get(0);
 			MarkerOptions markerOptionsfromlocation,tolocation;
+
+			new FetchURL(Maps.this).execute(getUrl(fromlocation.getPosition(),tolocations.getPosition(),"driving"));
+
             tolocation=new MarkerOptions().position(new LatLng(list2.get(0).getLatitude(),list.get(0).getLongitude())).title(address);
             markerOptionsfromlocation=new MarkerOptions().position(new LatLng(list.get(0).getLatitude(),list.get(0).getLongitude())).title(address);
 			map.addMarker(markerOptionsfromlocation);
@@ -338,21 +480,22 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, TaskLo
 		}
 		map.setMyLocationEnabled(true);
 
-		CircleOptions circleOptions=new CircleOptions();
-        circleOptions.center(latLng);
-		map.setMapType(GoogleMap.MAP_TYPE_NORMAL);
-		map.animateCamera(CameraUpdateFactory.zoomTo( 17.0f ) );
-		map.setTrafficEnabled(true);
-        circleOptions.radius(1000);
-        circleOptions.fillColor(R.color.blue);
-        circleOptions.clickable(true);
-        map.addCircle(circleOptions);
+//		CircleOptions circleOptions=new CircleOptions();
+//        circleOptions.center(latLng);
+//		map.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+//		map.animateCamera(CameraUpdateFactory.zoomTo( 17.0f ) );
+//		map.setTrafficEnabled(true);
+//        circleOptions.radius(1000);
+//        circleOptions.fillColor(R.color.blue);
+//        circleOptions.clickable(true);
+//        map.addCircle(circleOptions);
         MarkerOptions marker = new MarkerOptions()
                 .position(latLng)
                 .title("Balaji");
         map.addMarker(marker);
-        map.addMarker(markerOptions);
-        map.addMarker(markerOptions2);
+//        map.setOnMarkerDragListener(this);
+//        map.addMarker(fromlocation);
+//        map.addMarker(tolocations);
 	}
 
 
@@ -386,6 +529,28 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, TaskLo
 	public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
 
 	}
+
+//	@Override
+//	public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+//
+//	}
+//
+//	@Override
+//	public void onMarkerDragStart(Marker marker) {
+//		Toast.makeText(Maps.this, marker.toString(), Toast.LENGTH_LONG).show();
+//	}
+//
+//	@Override
+//	public void onMarkerDrag(Marker marker) {
+//		Toast.makeText(Maps.this, marker.toString(), Toast.LENGTH_LONG).show();
+//
+//	}
+//
+//	@Override
+//	public void onMarkerDragEnd(Marker marker) {
+//		Toast.makeText(Maps.this, marker.toString(), Toast.LENGTH_LONG).show();
+//
+//	}
 
 
 	private class GeocodeAsyncTask extends AsyncTask<Double, Void, Address> {
@@ -486,7 +651,15 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, TaskLo
 		//map.addMarker(markerOptions);
 		//map.addMarker(markerOptions2);
 		moveCamera(new LatLng(latitude,longitute),12.0f);
-		//getsearch();
+		getautocomplete();
+
+		map.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
+			@Override
+			public void onMapClick(LatLng latLng) {
+				Toast.makeText(Maps.this, String.valueOf(latLng.longitude)+latLng.longitude, Toast.LENGTH_LONG).show();
+			}
+		});
+//		getsearch();
 
 //		alandur 12.997146, 80.201990
 
@@ -504,9 +677,10 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, TaskLo
 		// Output format
 		String output = "json";
 		// Building the url to the web service
-		String url = "https://maps.googleapis.com/maps/api/directions/" + output + "?" + parameters + "&key=AIzaSyB9kdMz4eGNnXSMSMQ0cGLG7tHq6bNLr18" + getString(R.string.google_maps_key);
+		String url = "https://maps.googleapis.com/maps/api/directions/" + output + "?" + parameters + "&key=AIzaSyB9kdMz4eGNnXSMSMQ0cGLG7tHq6bNLr18";
 		return url;
 	}
+
 
 	@Override
 	public void onTaskDone(Object... values) {
