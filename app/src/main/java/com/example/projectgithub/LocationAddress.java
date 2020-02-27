@@ -12,9 +12,12 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -28,6 +31,7 @@ import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationManager;
+import android.media.RingtoneManager;
 import android.net.ConnectivityManager;
 import android.net.LocalSocketAddress;
 import android.net.Uri;
@@ -108,7 +112,7 @@ public class LocationAddress extends AppCompatActivity  implements  GoogleApiCli
 	private NetworkConnection networkConnection;
 
 	private ProgressDialog progressDialog;
-	private Button startservice,stopservice,openmap,pickimage;
+	private Button startservice,stopservice,openmap,pickimage,notification;
 
 	//service
 	public static final String ACTION_START_FOREGROUND_SERVICE = "ACTION_START_FOREGROUND_SERVICE";
@@ -127,6 +131,8 @@ public class LocationAddress extends AppCompatActivity  implements  GoogleApiCli
 
 	//room database
 	private AppDatabase appDatabase;
+	//notification
+	private Integer j= 0;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -143,6 +149,7 @@ public class LocationAddress extends AppCompatActivity  implements  GoogleApiCli
 		pickimage=findViewById(R.id.pickimage);
 		selectedimage=findViewById(R.id.selectedimage);
 		alereadyimage=findViewById(R.id.alereadyimage);
+		notification=findViewById(R.id.notification);
 		networkConnection=new NetworkConnection(LocationAddress.this);
 		locationaddress = findViewById(R.id.locationaddress);
 		progressDialog = new ProgressDialog(this);
@@ -205,6 +212,23 @@ public class LocationAddress extends AppCompatActivity  implements  GoogleApiCli
 				else {
 					startService(new Intent(LocationAddress.this, BGServicenormal.class).setAction(ACTION_START_FOREGROUND_SERVICE));
 				}
+			}
+		});
+		notification.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View view) {
+				Uri alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+				NotificationManager notif=(NotificationManager)LocationAddress.this.getSystemService(Context.NOTIFICATION_SERVICE);
+				Notification notify=new Notification.Builder
+						(LocationAddress.this.getApplicationContext()).
+						setContentTitle(LocationAddress.this.getResources().getString(R.string.app_name)).
+						setContentText(String.valueOf(lastLocation.getLongitude()+lastLocation.getLatitude())).
+						setVibrate(new long[]{100,250,100,250,100,250}).
+						setSound(alarmSound).
+						setSmallIcon(R.drawable.ic_launcher_background).build();
+				notify.flags |= Notification.FLAG_AUTO_CANCEL;
+				notify.number+=1;
+				notif.notify(j++, notify);
 			}
 		});
 		stopservice.setOnClickListener(new View.OnClickListener() {
